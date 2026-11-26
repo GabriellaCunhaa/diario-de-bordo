@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#5b3fd1">
+<title>Diário de Bordo</title>
+<style>
+  :root{
+    --bg:#f6f5fb; --card:#fff; --ink:#1d1b2a; --muted:#6b6880; --line:#e4e1ef;
+    --pri:#5b3fd1; --pri-2:#ede9ff; --ok:#1f9d6b; --warn:#c77700; --warn-bg:#fff4e0; --bad:#c9353f;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.4;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  header{position:sticky;top:0;z-index:5;background:var(--pri);color:#fff;padding:14px 16px calc(14px) ;padding-top:calc(14px + env(safe-area-inset-top))}
+  header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  header p{margin:2px 0 0;font-size:13px;opacity:.85}
+  main{max-width:640px;margin:0 auto;padding:14px}
+  section.tela{display:none} section.tela.ativa{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+  h2{font-size:17px;margin:4px 0 10px}
+  h3{font-size:15px;margin:14px 0 8px;color:var(--pri)}
+  label{display:block;font-size:14px;font-weight:600;margin:10px 0 4px}
+  .dica{font-size:13px;color:var(--muted);margin:2px 0 6px}
+  input,select,textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  textarea{min-height:80px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:0;border-color:transparent}
+  .linha{display:flex;gap:10px} .linha>*{flex:1}
+  button{font:inherit;border:0;border-radius:12px;padding:12px 14px;font-weight:600;cursor:pointer}
+  .btn{background:var(--pri);color:#fff;width:100%;margin-top:12px}
+  .btn.sec{background:var(--pri-2);color:var(--pri)}
+  .btn.perigo{background:#fde8ea;color:var(--bad)}
+  .btn.pq{width:auto;padding:8px 12px;margin:0;font-size:14px}
+  .tipos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tipo{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 6px;font-size:12.5px;font-weight:600;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:4px;min-height:74px;text-align:center}
+  .tipo span{font-size:22px}
+  .tipo.sel{border-color:var(--pri);background:var(--pri-2);color:var(--pri)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{background:var(--pri-2);color:var(--pri);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:600}
+  .chk{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);font-weight:500;margin:0}
+  .chk input{width:22px;height:22px;flex:0 0 auto}
+  .radios{display:flex;flex-wrap:wrap;gap:6px}
+  .radios label{margin:0;font-weight:500;border:1px solid var(--line);border-radius:999px;padding:8px 12px;display:flex;align-items:center;gap:6px;background:#fff}
+  .radios input{width:auto}
+  .radios label:has(input:checked){border-color:var(--pri);background:var(--pri-2);color:var(--pri)}
+  .reg{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .reg:last-child{border-bottom:0}
+  .reg .ic{font-size:22px;flex:0 0 28px;text-align:center}
+  .reg .tx{flex:1;min-width:0}
+  .reg .tt{font-weight:600;font-size:14px}
+  .reg .ds{font-size:13.5px;color:var(--muted);word-wrap:break-word}
+  .reg .ac{display:flex;flex-direction:column;gap:6px}
+  .dia{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 2px}
+  .aviso{background:var(--warn-bg);color:#6a4200;border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+  .aviso ul{margin:6px 0 0;padding-left:18px}
+  .ok{background:#e4f6ee;color:#0f5c3e}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:var(--pri-2);border-radius:12px;padding:10px;text-align:center}
+  .stat b{display:block;font-size:22px;color:var(--pri)}
+  .stat small{font-size:12px;color:var(--muted)}
+  #saida{min-height:60vh;font-size:14px;line-height:1.45}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+  nav button{flex:1;background:none;border-radius:0;padding:9px 2px 10px;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+  nav button span{font-size:20px}
+  nav button.ativa{color:var(--pri)}
+  #toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .vazio{color:var(--muted);text-align:center;padding:18px 6px;font-size:14px}
+  .turma-box{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+  .dias{display:flex;gap:4px;flex-wrap:wrap}
+  .dias label{margin:0;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-weight:600;font-size:13px;display:flex;gap:4px;align-items:center}
+  .dias input{width:auto}
+  .dias label:has(input:checked){background:var(--pri-2);border-color:var(--pri);color:var(--pri)}
+  .editando{background:var(--warn-bg);color:#6a4200;border-radius:10px;padding:8px 10px;font-size:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📓 Diário de Bordo</h1>
+  <p id="subtitulo">Anote na hora, relatório pronto no fim do mês</p>
+</header>
+
+<main>
+  <!-- ANOTAR -->
+  <section class="tela ativa" id="t-anotar">
+    <div id="avisoBackup"></div>
+    <div class="card">
+      <div id="modoEdicao"></div>
+      <div class="linha">
+        <div><label for="fData">Data</label><input type="date" id="fData"></div>
+        <div><label for="fTurma">Turma</label><select id="fTurma"></select></div>
+      </div>
+      <label>O que aconteceu?</label>
+      <div class="tipos" id="tipos"></div>
+      <div id="campos"></div>
+      <button class="btn" id="btnSalvar" hidden>Salvar anotação</button>
+    </div>
+    <div class="card">
+      <h2>Hoje</h2>
+      <div id="listaHoje"></div>
+    </div>
+  </section>
+
+  <!-- HISTÓRICO -->
+  <section class="tela" id="t-historico">
+    <div class="card">
+      <label for="hMes">Mês de referência</label>
+      <div class="dica" id="hPer"></div>
+      <input type="month" id="hMes">
+      <label for="hTipo">Tipo</label>
+      <select id="hTipo"></select>
+    </div>
+    <div class="card" id="listaHist"></div>
+  </section>
+
+  <!-- MÊS -->
+  <section class="tela" id="t-mes">
+    <div class="card">
+      <h2>Fechamento do mês</h2>
+      <p class="dica">O que não dá para anotar no dia a dia. Preencha perto do dia 24. O período vai do dia 25 do mês anterior ao dia 24 (dá para ajustar).</p>
+      <label for="mRef">Mês de referência</label>
+      <input type="month" id="mRef">
+      <div class="linha">
+        <div><label for="mIni">Período: de</label><input type="date" id="mIni"></div>
+        <div><label for="mFim">até</label><input type="date" id="mFim"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Resumo das anotações no período</h3>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="card" id="formMes"></div>
+  </section>
+
+  <!-- RELATÓRIO -->
+  <section class="tela" id="t-relatorio">
+    <div class="card">
+      <h2>Proposta de relatório</h2>
+      <p class="dica">Usa o mês configurado em <b>Mês</b>. O texto abaixo é editável: revise, ajuste e depois copie ou baixe.</p>
+      <div id="relRef" class="chip" style="display:inline-block"></div>
+      <button class="btn" id="btnGerar">Gerar proposta</button>
+    </div>
+    <div id="avisosRel"></div>
+    <div class="card" id="boxSaida" hidden>
+      <textarea id="saida" spellcheck="true"></textarea>
+      <button class="btn" id="btnCopiar">Copiar texto</button>
+      <div class="linha">
+        <button class="btn sec" id="btnDoc">Baixar .doc (Word)</button>
+        <button class="btn sec" id="btnTxt">Baixar .txt</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="tela" id="t-ajustes">
+    <div class="card">
+      <h2>Identificação</h2>
+      <label for="cMun">Município</label><input id="cMun">
+      <label for="cUni">Unidade/Escola</label><input id="cUni">
+      <label for="cIns">Instrutor(a)</label><input id="cIns">
+      <label for="cMon">Monitor(a)</label><input id="cMon">
+      <label for="cLim">Faltas para considerar "recorrente" no mês</label>
+      <input id="cLim" type="number" min="1" inputmode="numeric">
+      <button class="btn" id="btnSalvarCfg">Salvar identificação</button>
+    </div>
+    <div class="card">
+      <h2>Turmas</h2>
+      <p class="dica">Os dias de aula servem para calcular as aulas previstas. Os alunos aparecem na hora de marcar faltas.</p>
+      <div id="listaTurmas"></div>
+      <button class="btn sec" id="btnAddTurma">+ Adicionar turma</button>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="dica" id="infoBackup"></p>
+      <p class="dica">Os dados ficam <b>só neste aparelho</b>. Se o navegador for limpo, eles somem, por isso exporte um backup com frequência e guarde em local seguro.</p>
+      <button class="btn" id="btnExport">Exportar backup (.json)</button>
+      <button class="btn sec" id="btnImport">Importar backup</button>
+      <input type="file" id="fileImport" accept=".json,application/json" hidden>
+    </div>
+    <div class="card">
+      <h2>Zona de perigo</h2>
+      <button class="btn perigo" id="btnApagar">Apagar todos os dados deste aparelho</button>
+    </div>
+  </section>
+</main>
+
+<nav id="nav">
+  <button data-t="anotar" class="ativa"><span>✏️</span>Anotar</button>
+  <button data-t="historico"><span>🗂️</span>Histórico</button>
+  <button data-t="mes"><span>📅</span>Mês</button>
+  <button data-t="relatorio"><span>📄</span>Relatório</button>
+  <button data-t="ajustes"><span>⚙️</span>Ajustes</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Armazenamento (somente local) ---------- */
+const CHAVE = 'diarioBordo.v1';
+const vazio = () => ({ versao:1, config:{municipio:'',unidade:'',instrutor:'',monitor:'',limiteFaltas:2}, turmas:[], registros:[], meses:{}, ultimoBackup:null });
+let S;
+try { S = JSON.parse(localStorage.getItem(CHAVE)) || vazio(); } catch(e){ S = vazio(); }
+S = Object.assign(vazio(), S);
+function salvar(){
+  try { localStorage.setItem(CHAVE, JSON.stringify(S)); }
+  catch(e){ alert('Não foi possível salvar neste aparelho. Exporte um backup agora.'); }
+}
+if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(()=>{}); }
+
+/* ---------- Utilitários ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const pad = n => String(n).padStart(2,'0');
+const isoLocal = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hoje = () => isoLocal(new Date());
+const mesAtual = () => refDe(hoje());
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const br = s => s ? s.split('-').reverse().slice(0,2).join('/') : '';
+const brCompleta = s => s ? s.split('-').reverse().join('/') : '';
+const DIA_FECHAMENTO = 24; // período: dia 25 do mês anterior até dia 24 do mês de referência
+const periodoPadrao = ym => { const [y,m] = ym.split('-').map(Number); return { inicio: isoLocal(new Date(y, m-2, DIA_FECHAMENTO+1)), fim: isoLocal(new Date(y, m-1, DIA_FECHAMENTO)) }; };
+const refDe = iso => { const d = parse(iso); if (d.getDate() > DIA_FECHAMENTO) d.setMonth(d.getMonth()+1, 1); return isoLocal(d).slice(0,7); };
+const SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const SEMANA_LONGA = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),1800); }
+const nomeTurma = id => (S.turmas.find(t=>t.id===id)||{}).nome || '';
+
+/* ---------- Tipos de anotação ---------- */
+const TIPOS = {
+  aula_realizada:  {ic:'✅', r:'Aula realizada', campos:[{k:'conteudo',l:'Conteúdo trabalhado',t:'area',d:'Opcional. Ajuda a lembrar das habilidades do mês.'}]},
+  aula_cancelada:  {ic:'🚫', r:'Aula cancelada', campos:[
+      {k:'motivo',l:'Motivo',t:'text',sug:['Feriado','Ponto facultativo','Chuva','Falta de energia','Sem internet','Evento da escola','Reunião/formação','Laboratório indisponível','Problema de saúde']},
+      {k:'remarcada',l:'Foi remarcada?',t:'sn'},
+      {k:'novaData',l:'Nova data (se remarcada)',t:'date'}]},
+  reposicao:       {ic:'🔁', r:'Aula de reposição', campos:[{k:'conteudo',l:'Conteúdo trabalhado',t:'area',d:'Use só quando a aula cancelada NÃO foi marcada como "remarcada", para não contar duas vezes.'}]},
+  lab_indisponivel:{ic:'🔒', r:'Lab indisponível', campos:[{k:'motivo',l:'Motivo',t:'text',sug:['Sala ocupada','Sem chave','Manutenção','Falta de energia']}]},
+  problema_tecnico:{ic:'⚡', r:'Problema técnico', campos:[
+      {k:'categoria',l:'Tipo de problema',t:'sel',op:['Computadores','Internet','Kits','Energia','Chuva','Outro']},
+      {k:'descricao',l:'O que aconteceu',t:'area'}]},
+  defeito:         {ic:'🔧', r:'Equipamento com defeito', campos:[
+      {k:'equipamento',l:'Equipamento/componente',t:'text',sug:['Arduino UNO','Protoboard','Jumpers','LED','Resistor','Sensor ultrassônico','Sensor de umidade','LDR','Servo motor','Motor DC','Buzzer/piezo','Cabo USB','Computador','Mouse','Teclado','Kit de robótica']},
+      {k:'quantidade',l:'Quantidade',t:'num'},
+      {k:'origem',l:'Situação',t:'radio',op:[['novo','Novo, já veio com defeito'],['uso','Estragou com o uso']]},
+      {k:'descricao',l:'Detalhes',t:'area',d:'Ex.: não liga, pino quebrado, não é reconhecido pelo PC.'}]},
+  falta:           {ic:'🙋', r:'Faltas', campos:[{k:'alunos',l:'Quem faltou?',t:'alunos'}]},
+  evasao:          {ic:'🚪', r:'Possível evasão', campos:[{k:'aluno',l:'Aluno(a)',t:'aluno'},{k:'situacao',l:'Situação',t:'area',d:'Ex.: não vem há 3 semanas, mudou de horário na escola.'}]},
+  comportamento:   {ic:'💬', r:'Comportamento da turma', campos:[{k:'nota',l:'Como a turma estava',t:'area',d:'Engajamento, conversas, interesse, conflitos.'}]},
+  habilidade:      {ic:'🌱', r:'Habilidade desenvolvida', campos:[{k:'texto',l:'Habilidade/avanço',t:'area',d:'Ex.: montaram circuito com LED sem ajuda.'}]},
+  dificuldade:     {ic:'🧩', r:'Dificuldade da turma', campos:[{k:'conteudo',l:'Conteúdo com dificuldade',t:'text'},{k:'descricao',l:'Detalhes',t:'area'}]},
+  cronograma:      {ic:'🗓️', r:'Ajuste no cronograma', campos:[{k:'justificativa',l:'O que mudou e por quê',t:'area'}]},
+  material:        {ic:'📦', r:'Repor material', campos:[{k:'item',l:'Material',t:'text'},{k:'quantidade',l:'Quantidade',t:'num'}]},
+  suporte:         {ic:'🆘', r:'Suporte do START', campos:[{k:'tipo',l:'Tipo',t:'radio',op:[['tecnico','Técnico'],['pedagogico','Pedagógico']]},{k:'descricao',l:'O que é preciso',t:'area'}]},
+  ocorrencia:      {ic:'📝', r:'Outra ocorrência', campos:[{k:'texto',l:'O que aconteceu',t:'area'}]}
+};
+
+function resumo(r){
+  const c = r.campos || {};
+  switch(r.tipo){
+    case 'aula_realizada': case 'reposicao': return c.conteudo || '';
+    case 'aula_cancelada': return [c.motivo, c.remarcada==='sim' ? ('remarcada' + (c.novaData ? ' para '+br(c.novaData) : '')) : ''].filter(Boolean).join(' · ');
+    case 'lab_indisponivel': return c.motivo || '';
+    case 'problema_tecnico': return [c.categoria, c.descricao].filter(Boolean).join(': ');
+    case 'defeito': return [c.equipamento + (c.quantidade ? ` (${c.quantidade} un.)` : ''), c.origem==='novo' ? 'novo, já veio com defeito' : c.origem==='uso' ? 'estragou com o uso' : '', c.descricao].filter(Boolean).join(' · ');
+    case 'falta': return (c.alunos||[]).join(', ');
+    case 'evasao': return [c.aluno, c.situacao].filter(Boolean).join(': ');
+    case 'comportamento': return c.nota || '';
+    case 'habilidade': case 'ocorrencia': return c.texto || '';
+    case 'dificuldade': return [c.conteudo, c.descricao].filter(Boolean).join(': ');
+    case 'cronograma': return c.justificativa || '';
+    case 'material': return c.item + (c.quantidade ? ` (${c.quantidade})` : '');
+    case 'suporte': return [c.tipo==='tecnico'?'Técnico':c.tipo==='pedagogico'?'Pedagógico':'', c.descricao].filter(Boolean).join(': ');
+  }
+  return '';
+}
+
+/* ---------- Navegação ---------- */
+const RENDER = {};
+$('nav').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  irPara(b.dataset.t);
+});
+function irPara(t){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('ativa', x.dataset.t===t));
+  document.querySelectorAll('section.tela').forEach(x=>x.classList.toggle('ativa', x.id==='t-'+t));
+  window.scrollTo(0,0);
+  RENDER[t] && RENDER[t]();
+}
+
+/* ---------- ANOTAR ---------- */
+let tipoSel = null, editId = null;
+function opcoesTurma(sel){
+  const op = S.turmas.map(t=>`<option value="${esc(t.id)}" ${t.id===sel?'selected':''}>${esc(t.nome)}</option>`).join('');
+  return `<option value="">${S.turmas.length ? 'Geral / todas' : 'Cadastre turmas em Ajustes'}</option>` + op;
+}
+function renderTipos(){
+  $('tipos').innerHTML = Object.entries(TIPOS).map(([k,t]) =>
+    `<button type="button" class="tipo ${k===tipoSel?'sel':''}" data-k="${k}"><span>${t.ic}</span>${esc(t.r)}</button>`).join('');
+}
+$('tipos').addEventListener('click', e => {
+  const b = e.target.closest('.tipo'); if(!b) return;
+  tipoSel = b.dataset.k; renderTipos(); renderCampos({});
+  setTimeout(()=>$('campos').scrollIntoView({behavior:'smooth',block:'start'}),50);
+});
+$('fTurma').addEventListener('change', () => { if(tipoSel==='falta'||tipoSel==='evasao') renderCampos(coletar()); });
+
+function alunosDaTurma(){
+  const t = S.turmas.find(x=>x.id===$('fTurma').value);
+  if (t) return t.alunos || [];
+  return [...new Set(S.turmas.flatMap(x=>x.alunos||[]))];
+}
+function renderCampos(v){
+  if(!tipoSel){ $('campos').innerHTML=''; $('btnSalvar').hidden=true; return; }
+  const T = TIPOS[tipoSel];
+  let h = `<h3>${T.ic} ${esc(T.r)}</h3>`;
+  T.campos.forEach(c => {
+    const id = 'c_'+c.k, val = v[c.k] ?? '';
+    h += `<label for="${id}">${esc(c.l)}</label>` + (c.d ? `<div class="dica">${esc(c.d)}</div>` : '');
+    if (c.t==='text'){
+      h += `<input id="${id}" value="${esc(val)}" ${c.sug?`list="dl_${c.k}"`:''} autocomplete="off">`;
+      if (c.sug) h += `<datalist id="dl_${c.k}">${c.sug.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
+        <div class="chips">${c.sug.slice(0,6).map(s=>`<button type="button" class="chip" data-fill="${id}">${esc(s)}</button>`).join('')}</div>`;
+    } else if (c.t==='area'){ h += `<textarea id="${id}">${esc(val)}</textarea>`; }
+    else if (c.t==='num'){ h += `<input id="${id}" type="number" min="1" inputmode="numeric" value="${esc(val)}">`; }
+    else if (c.t==='date'){ h += `<input id="${id}" type="date" value="${esc(val)}">`; }
+    else if (c.t==='sel'){ h += `<select id="${id}">${c.op.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select>`; }
+    else if (c.t==='sn'){ h += radios(id, [['sim','Sim'],['nao','Não']], val); }
+    else if (c.t==='radio'){ h += radios(id, c.op, val); }
+    else if (c.t==='alunos'){
+      const lista = alunosDaTurma(), marc = new Set(val||[]);
+      h += lista.length ? `<div id="${id}">${lista.map(a=>`<label class="chk"><input type="checkbox" value="${esc(a)}" ${marc.has(a)?'checked':''}>${esc(a)}</label>`).join('')}</div>` : '';
+      const extras = (val||[]).filter(a=>!lista.includes(a));
+      h += `<label for="${id}_x">${lista.length?'Outros (um por linha)':'Nomes (um por linha)'}</label><textarea id="${id}_x">${esc(extras.join('\n'))}</textarea>`;
+    }
+    else if (c.t==='aluno'){
+      const lista = alunosDaTurma();
+      h += `<input id="${id}" list="dl_al" value="${esc(val)}" autocomplete="off"><datalist id="dl_al">${lista.map(a=>`<option value="${esc(a)}">`).join('')}</datalist>`;
+    }
+  });
+  $('campos').innerHTML = h; $('btnSalvar').hidden = false;
+}
+function radios(name, op, val){
+  return `<div class="radios" id="${name}">${op.map(([v,l])=>`<label><input type="radio" name="${name}" value="${v}" ${v===val?'checked':''}>${esc(l)}</label>`).join('')}</div>`;
+}
+$('campos').addEventListener('click', e => {
+  const b = e.target.closest('[data-fill]'); if(!b) return;
+  $(b.dataset.fill).value = b.textContent;
+});
+function coletar(){
+  const out = {};
+  (TIPOS[tipoSel]?.campos||[]).forEach(c => {
+    const id='c_'+c.k;
+    if (c.t==='sn'||c.t==='radio'){ const x=document.querySelector(`input[name="${id}"]:checked`); out[c.k]= x?x.value:''; }
+    else if (c.t==='alunos'){
+      const m=[...document.querySelectorAll(`#${id} input:checked`)].map(i=>i.value);
+      const x=($(id+'_x')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+      out[c.k]=[...new Set([...m,...x])];
+    } else { out[c.k] = ($(id)?.value||'').trim(); }
+  });
+  return out;
+}
+$('btnSalvar').addEventListener('click', () => {
+  const campos = coletar(), data = $('fData').value || hoje();
+  if (tipoSel==='falta' && !campos.alunos.length) return toast('Marque quem faltou');
+  if (tipoSel==='defeito' && !campos.equipamento) return toast('Informe o equipamento');
+  if (tipoSel==='evasao' && !campos.aluno) return toast('Informe o aluno');
+  if (editId){
+    const r = S.registros.find(x=>x.id===editId);
+    Object.assign(r, {data, turmaId:$('fTurma').value, tipo:tipoSel, campos});
+    toast('Anotação atualizada');
+  } else {
+    S.registros.push({id:uid(), data, turmaId:$('fTurma').value, tipo:tipoSel, campos, criadoEm:new Date().toISOString()});
+    toast('Anotado ✓');
+  }
+  salvar(); sairEdicao();
+});
+function sairEdicao(){
+  editId=null; tipoSel=null; $('modoEdicao').innerHTML=''; $('btnSalvar').textContent='Salvar anotação';
+  renderTipos(); renderCampos({}); renderHoje();
+}
+function editar(id){
+  const r = S.registros.find(x=>x.id===id); if(!r) return;
+  irPara('anotar');
+  editId=id; tipoSel=r.tipo;
+  $('fData').value=r.data; $('fTurma').innerHTML=opcoesTurma(r.turmaId);
+  $('modoEdicao').innerHTML=`<div class="editando">Editando anotação de ${brCompleta(r.data)} <button class="btn sec pq" id="cancEd">Cancelar</button></div>`;
+  $('cancEd').onclick = () => { sairEdicao(); $('fData').value = hoje(); };
+  $('btnSalvar').textContent='Salvar alterações';
+  renderTipos(); renderCampos(r.campos||{});
+}
+function excluir(id){
+  if(!confirm('Excluir esta anotação?')) return;
+  S.registros = S.registros.filter(x=>x.id!==id); salvar(); toast('Excluída');
+  renderHoje(); RENDER.historico();
+}
+function itemReg(r, mostrarData){
+  const T = TIPOS[r.tipo] || {ic:'•', r:r.tipo};
+  const tur = nomeTurma(r.turmaId);
+  return `<div class="reg"><div class="ic">${T.ic}</div><div class="tx">
+    <div class="tt">${esc(T.r)}${tur?` · ${esc(tur)}`:''}${mostrarData?` · ${br(r.data)}`:''}</div>
+    <div class="ds">${esc(resumo(r))}</div></div>
+    <div class="ac"><button class="btn sec pq" data-ed="${r.id}">Editar</button><button class="btn perigo pq" data-ex="${r.id}">Excluir</button></div></div>`;
+}
+document.addEventListener('click', e => {
+  const ed = e.target.closest('[data-ed]'); if (ed) return editar(ed.dataset.ed);
+  const ex = e.target.closest('[data-ex]'); if (ex) return excluir(ex.dataset.ex);
+});
+function renderHoje(){
+  const d = $('fData').value || hoje();
+  const l = S.registros.filter(r=>r.data===d).sort((a,b)=>a.criadoEm<b.criadoEm?1:-1);
+  document.querySelector('#t-anotar .card:last-child h2').textContent = d===hoje() ? 'Hoje' : `Em ${brCompleta(d)}`;
+  $('listaHoje').innerHTML = l.length ? l.map(r=>itemReg(r,false)).join('') : '<div class="vazio">Nada anotado neste dia ainda.</div>';
+}
+$('fData').addEventListener('change', renderHoje);
+function avisoBackup(){
+  const dias = S.ultimoBackup ? Math.floor((Date.now()-new Date(S.ultimoBackup))/864e5) : null;
+  const precisa = S.registros.length && (dias===null || dias>=14);
+  $('avisoBackup').innerHTML = precisa ? `<div class="aviso">💾 ${dias===null?'Você ainda não fez nenhum backup.':`Último backup há ${dias} dias.`} <a href="#" id="lkBk">Fazer agora</a></div>` : '';
+  const lk=$('lkBk'); if(lk) lk.onclick = ev => { ev.preventDefault(); exportar(); };
+}
+RENDER.anotar = () => {
+  if(!editId){ $('fTurma').innerHTML = opcoesTurma($('fTurma').value); }
+  renderTipos(); renderHoje(); avisoBackup();
+};
+
+/* ---------- HISTÓRICO ---------- */
+$('hTipo').innerHTML = '<option value="">Todos</option>' + Object.entries(TIPOS).map(([k,t])=>`<option value="${k}">${t.ic} ${esc(t.r)}</option>`).join('');
+$('hMes').value = mesAtual();
+$('hMes').addEventListener('change', ()=>RENDER.historico());
+$('hTipo').addEventListener('change', ()=>RENDER.historico());
+RENDER.historico = () => {
+  const m=$('hMes').value, tp=$('hTipo').value;
+  const P = m ? (S.meses[m] || periodoPadrao(m)) : null;
+  $('hPer').textContent = P ? `De ${brCompleta(P.inicio)} a ${brCompleta(P.fim)}` : '';
+  const l = S.registros.filter(r=>(!P||(r.data>=P.inicio && r.data<=P.fim)) && (!tp||r.tipo===tp)).sort((a,b)=>a.data===b.data?(a.criadoEm<b.criadoEm?1:-1):(a.data<b.data?1:-1));
+  if(!l.length){ $('listaHist').innerHTML='<div class="vazio">Nenhuma anotação encontrada.</div>'; return; }
+  let h='', dia='';
+  l.forEach(r=>{ if(r.data!==dia){ dia=r.data; h+=`<div class="dia">${SEMANA_LONGA[parse(dia).getDay()]}, ${brCompleta(dia)}</div>`; } h+=itemReg(r,false); });
+  $('listaHist').innerHTML=h;
+};
+
+/* ---------- MÊS ---------- */
+function dadosMes(ym){
+  if(!S.meses[ym]) S.meses[ym] = periodoPadrao(ym);
+  return S.meses[ym];
+}
+function calc(ym){
+  const M = dadosMes(ym);
+  const regs = S.registros.filter(r=>r.data>=M.inicio && r.data<=M.fim).sort((a,b)=>a.data<b.data?-1:1);
+  const de = t => regs.filter(r=>r.tipo===t);
+  let previstas = 0;
+  for (let d=parse(M.inicio); isoLocal(d)<=M.fim; d.setDate(d.getDate()+1)){
+    S.turmas.forEach(t=>{ if((t.dias||[]).includes(d.getDay())) previstas++; });
+  }
+  const canceladas = de('aula_cancelada').length, reposicoes = de('reposicao').length;
+  const semRemarcar = de('aula_cancelada').filter(r=>r.campos.remarcada!=='sim').length;
+  const contFaltas = {};
+  de('falta').forEach(r=>(r.campos.alunos||[]).forEach(a=>{
+    const k = a + '|' + (r.turmaId||''); contFaltas[k] = (contFaltas[k]||0)+1;
+  }));
+  const lim = Number(S.config.limiteFaltas)||2;
+  const recorrentes = Object.entries(contFaltas).filter(([,n])=>n>=lim).map(([k,n])=>{ const [a,t]=k.split('|'); return {aluno:a, turma:nomeTurma(t), n}; }).sort((a,b)=>b.n-a.n);
+  return { M, regs, de, previstas, canceladas, reposicoes, realizadas: Math.max(0, previstas - semRemarcar + reposicoes), recorrentes,
+           matriculados: S.turmas.reduce((s,t)=>s+(Number(t.matriculados)||0),0) };
+}
+$('mRef').value = mesAtual();
+function carregarPeriodo(){ const M=dadosMes($('mRef').value); $('mIni').value=M.inicio; $('mFim').value=M.fim; }
+$('mRef').addEventListener('change', ()=>{ carregarPeriodo(); salvar(); RENDER.mes(); });
+['mIni','mFim'].forEach(id=>$(id).addEventListener('change', ()=>{
+  const M=dadosMes($('mRef').value); M.inicio=$('mIni').value||M.inicio; M.fim=$('mFim').value||M.fim; salvar(); RENDER.mes();
+}));
+const CAMPOS_MES = [
+  {k:'previstas', l:'Aulas previstas', t:'num', auto:c=>c.previstas, d:'Calculado pelos dias de aula das turmas. Preencha só se quiser corrigir.'},
+  {k:'realizadas', l:'Aulas realizadas', t:'num', auto:c=>c.realizadas, d:'Previstas − canceladas sem remarcação + reposições.'},
+  {k:'matriculados', l:'Total de alunos matriculados', t:'num', auto:c=>c.matriculados||'', d:'Soma das turmas em Ajustes.'},
+  {k:'mediaPresenca', l:'Média de presença no mês', t:'text', d:'Copie da planilha de frequência. Ex.: 85% ou 17 alunos.'},
+  {k:'cumpridos', l:'Os conteúdos planejados foram cumpridos?', t:'radio', op:['Totalmente','Parcialmente','Não']},
+  {k:'justCumpridos', l:'Se parcialmente/não, justificar', t:'area'},
+  {k:'labDisponivel', l:'O laboratório esteve disponível em todas as aulas?', t:'radio', op:['Sim','Não'], d:'Se ficar em branco, usa as anotações de "Lab indisponível".'},
+  {k:'participacao', l:'Participação geral da turma', t:'radio', op:['Excelente','Boa','Regular','Baixa']},
+  {k:'evolucao', l:'Os alunos demonstraram evolução técnica?', t:'radio', op:['Sim','Parcialmente','Não']},
+  {k:'cronograma', l:'O cronograma está sendo seguido?', t:'radio', op:['Sim','Com ajustes','Não'], d:'Se ficar em branco, usa as anotações de "Ajuste no cronograma".'},
+  {k:'materialSuficiente', l:'O material didático foi suficiente?', t:'radio', op:['Sim','Não']},
+  {k:'obs', l:'Observações gerais extras', t:'area', d:'Além das anotações de "Outra ocorrência".'}
+];
+RENDER.mes = () => {
+  carregarPeriodo();
+  const ym=$('mRef').value, c=calc(ym), M=c.M;
+  const st = [['Previstas',c.previstas],['Canceladas',c.canceladas],['Reposições',c.reposicoes],
+              ['Probl. técnicos',c.de('problema_tecnico').length],['Defeitos',c.de('defeito').length],['Faltas recorr.',c.recorrentes.length]];
+  $('stats').innerHTML = st.map(([l,n])=>`<div class="stat"><b>${n}</b><small>${l}</small></div>`).join('');
+  let h='<h3>Perguntas do mês</h3>';
+  CAMPOS_MES.forEach(f=>{
+    const id='m_'+f.k, v=M[f.k]??'';
+    h+=`<label for="${id}">${esc(f.l)}</label>`+(f.d?`<div class="dica">${esc(f.d)}</div>`:'');
+    if(f.t==='num') h+=`<input id="${id}" type="number" min="0" inputmode="numeric" value="${esc(v)}" placeholder="${f.auto?'Automático: '+esc(f.auto(c)):''}">`;
+    else if(f.t==='text') h+=`<input id="${id}" value="${esc(v)}">`;
+    else if(f.t==='area') h+=`<textarea id="${id}">${esc(v)}</textarea>`;
+    else h+=radios(id, f.op.map(o=>[o,o]), v) + (v?` <button type="button" class="btn sec pq" data-limpa="${f.k}" style="margin-top:6px">Limpar</button>`:'');
+  });
+  h+='<button class="btn" id="btnSalvarMes">Salvar respostas do mês</button>';
+  $('formMes').innerHTML=h;
+  $('btnSalvarMes').onclick = salvarMes;
+};
+function salvarMes(silencioso){
+  const M=dadosMes($('mRef').value);
+  CAMPOS_MES.forEach(f=>{
+    const id='m_'+f.k;
+    if(f.t==='radio'){ const x=document.querySelector(`input[name="${id}"]:checked`); M[f.k]=x?x.value:''; }
+    else { const el=$(id); if(el) M[f.k]=el.value.trim(); }
+  });
+  salvar(); if(silencioso!==true) toast('Respostas salvas');
+}
+$('formMes').addEventListener('click', e=>{
+  const b=e.target.closest('[data-limpa]'); if(!b) return;
+  salvarMes(true); dadosMes($('mRef').value)[b.dataset.limpa]=''; salvar(); RENDER.mes();
+});
+$('formMes').addEventListener('change', ()=>salvarMes(true));
+
+/* ---------- RELATÓRIO ---------- */
+const X = (opcoes, escolhida) => opcoes.map(o=>`(${o===escolhida?'X':' '}) ${o}`);
+function gerar(){
+  const ym=$('mRef').value, c=calc(ym), M=c.M, C=S.config, avisos=[];
+  const multi = S.turmas.length>1;
+  const tur = r => multi && r.turmaId ? ` (${nomeTurma(r.turmaId)})` : '';
+  const lista = (arr, fn) => arr.length ? arr.map(r=>'- '+fn(r)).join('\n') : '';
+  const L=[];
+  const [ano,mes]=ym.split('-');
+  ['municipio','unidade','monitor'].forEach(k=>{ if(!C[k]) avisos.push(`Identificação incompleta (${k==='unidade'?'unidade/escola':k}) – preencha em Ajustes.`); });
+
+  L.push('RELATÓRIO MENSAL – INSTRUTOR OU MONITOR','');
+  L.push(`Município: ${C.municipio}`, `Unidade/Escola: ${C.unidade}`, `Instrutor(a): ${C.instrutor}`, `Monitor(a): ${C.monitor}`, `Mês de Referência: ${mes}/${ano}`, '');
+
+  // 1
+  const prev = M.previstas!=='' && M.previstas!=null ? M.previstas : c.previstas;
+  const real = M.realizadas!=='' && M.realizadas!=null ? M.realizadas : c.realizadas;
+  if(!S.turmas.some(t=>(t.dias||[]).length) && (M.previstas===''||M.previstas==null)) avisos.push('Aulas previstas: cadastre os dias de aula das turmas ou preencha o número em Mês.');
+  const canc = c.de('aula_cancelada');
+  L.push('1. Execução das Aulas','', `Quantidade de aulas previstas no mês: ${prev}`, `Quantidade de aulas realizadas: ${real}`,'');
+  L.push('Alguma aula precisou ser cancelada ou remarcada?', X(['Sim','Não'], canc.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, informar data(s) e motivo(s):');
+  L.push(lista(canc, r=>`${br(r.data)}${tur(r)}: ${r.campos.motivo||'motivo não anotado'}${r.campos.remarcada==='sim'?` – remarcada${r.campos.novaData?' para '+br(r.campos.novaData):''}`:''}`), '');
+  L.push('Os conteúdos planejados foram cumpridos?', ...X(['Totalmente','Parcialmente','Não'], M.cumpridos),'');
+  if(!M.cumpridos) avisos.push('Responda em Mês: os conteúdos planejados foram cumpridos?');
+  L.push('Se parcialmente, justificar:', M.cumpridos && M.cumpridos!=='Totalmente' ? (M.justCumpridos||'') : '', '');
+  if(M.cumpridos && M.cumpridos!=='Totalmente' && !M.justCumpridos) avisos.push('Justifique por que os conteúdos não foram totalmente cumpridos (em Mês).');
+
+  // 2
+  const lab = c.de('lab_indisponivel'), tec = c.de('problema_tecnico'), def = c.de('defeito');
+  const labDisp = M.labDisponivel || (lab.length?'Não':'Sim');
+  L.push('2. Uso do Laboratório','', 'O laboratório esteve disponível em todas as aulas?', X(['Sim','Não'], labDisp).join(' '),'');
+  if(lab.length) L.push(lista(lab, r=>`${br(r.data)}${tur(r)}: laboratório indisponível${r.campos.motivo?' – '+r.campos.motivo:''}`),'');
+  L.push('Houve problemas técnicos (computadores, internet, kits, energia, chuvas etc.)?', X(['Sim','Não'], tec.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, descrever:', lista(tec, r=>`${br(r.data)}${tur(r)} – ${r.campos.categoria||'Problema'}${r.campos.descricao?': '+r.campos.descricao:''}`),'');
+  L.push('Algum equipamento apresentou defeito?', X(['Sim','Não'], def.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, especificar qual equipamento e situação:');
+  L.push(lista(def, r=>{ const k=r.campos; return `${k.equipamento}${k.quantidade?` (${k.quantidade} un.)`:''}${k.origem==='novo'?' – novo, já veio com defeito ao ser aberto':k.origem==='uso'?' – apresentou defeito com o uso':''}${k.descricao?': '+k.descricao:''} (${br(r.data)}${tur(r)})`; }),'');
+
+  // 3
+  const eva = c.de('evasao'), comp = c.de('comportamento');
+  const matric = M.matriculados!=='' && M.matriculados!=null ? M.matriculados : (c.matriculados||'');
+  if(!matric) avisos.push('Informe o total de alunos matriculados (em Ajustes > Turmas ou em Mês).');
+  if(!M.mediaPresenca) avisos.push('Informe a média de presença (da planilha de frequência) em Mês.');
+  L.push('3. Frequência e Participação dos Estudantes','', `Número total de alunos matriculados: ${matric}`, `Média de presença no mês: ${M.mediaPresenca||''}`,'');
+  L.push('Houve casos de faltas recorrentes?', X(['Sim','Não'], c.recorrentes.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, informar nomes:', c.recorrentes.map(f=>`- ${f.aluno}${multi&&f.turma?` (${f.turma})`:''} – ${f.n} faltas no período`).join('\n'),'');
+  L.push('Houve casos de possível evasão?', X(['Sim','Não'], eva.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, informar nomes e situação:', lista(eva, r=>`${r.campos.aluno}${tur(r)}: ${r.campos.situacao||'situação não descrita'} (anotado em ${br(r.data)})`),'');
+  L.push('Participação geral da turma:', ...X(['Excelente','Boa','Regular','Baixa'], M.participacao),'');
+  if(!M.participacao) avisos.push('Responda em Mês: participação geral da turma.');
+  L.push('Descrever brevemente o comportamento e engajamento da turma:', lista(comp, r=>`${br(r.data)}${tur(r)}: ${r.campos.nota}`),'');
+  if(!comp.length) avisos.push('Nenhuma anotação de comportamento no período: escreva um resumo à mão no relatório.');
+
+  // 4
+  const hab = c.de('habilidade'), conts = [...c.de('aula_realizada'), ...c.de('reposicao')].filter(r=>r.campos.conteudo), dif = c.de('dificuldade');
+  L.push('4. Desenvolvimento Pedagógico','', 'Os alunos demonstraram evolução técnica?', ...X(['Sim','Parcialmente','Não'], M.evolucao),'');
+  if(!M.evolucao) avisos.push('Responda em Mês: os alunos demonstraram evolução técnica?');
+  L.push('Principais habilidades desenvolvidas no mês:');
+  if(hab.length) L.push(lista(hab, r=>`${r.campos.texto}${tur(r)}`));
+  else if(conts.length){ L.push(lista(conts, r=>`${r.campos.conteudo}${tur(r)}`)); avisos.push('Habilidades: não há anotações de "Habilidade desenvolvida", então usei os conteúdos das aulas. Reescreva como habilidades.'); }
+  else avisos.push('Habilidades desenvolvidas: nada anotado no período.');
+  L.push('');
+  L.push('Houve dificuldade recorrente em algum conteúdo específico?', X(['Sim','Não'], dif.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, qual conteúdo?', lista(dif, r=>`${r.campos.conteudo}${r.campos.descricao?': '+r.campos.descricao:''}${tur(r)}`),'');
+
+  // 5
+  const cro = c.de('cronograma');
+  const croSel = M.cronograma || (cro.length?'Com ajustes':'');
+  if(!croSel) avisos.push('Responda em Mês: o cronograma está sendo seguido?');
+  L.push('5. Organização e Planejamento','', 'O cronograma está sendo seguido conforme planejamento inicial?', ...X(['Sim','Com ajustes','Não'], croSel),'');
+  L.push('Se houve ajustes, justificar:', lista(cro, r=>`${br(r.data)}${tur(r)}: ${r.campos.justificativa}`),'');
+  L.push('O material didático foi suficiente?', X(['Sim','Não'], M.materialSuficiente).join(' '),'');
+  if(!M.materialSuficiente) avisos.push('Responda em Mês: o material didático foi suficiente?');
+
+  // 6
+  const mat = c.de('material'), sup = c.de('suporte');
+  L.push('6. Demandas e Necessidades','', 'Há necessidade de reposição de materiais?', X(['Sim','Não'], mat.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, especificar:', lista(mat, r=>`${r.campos.item}${r.campos.quantidade?` – ${r.campos.quantidade} un.`:''}`),'');
+  L.push('Há necessidade de suporte técnico ou pedagógico do START?', X(['Sim','Não'], sup.length?'Sim':'Não').join(' '),'');
+  L.push('Se sim, descrever:', lista(sup, r=>`${r.campos.tipo==='tecnico'?'Técnico':r.campos.tipo==='pedagogico'?'Pedagógico':'Suporte'}: ${r.campos.descricao}`),'');
+
+  // 7
+  const oco = c.de('ocorrencia');
+  L.push('7. Observações Gerais','', 'Espaço para registrar qualquer ocorrência relevante não mencionada anteriormente:');
+  L.push([lista(oco, r=>`${br(r.data)}${tur(r)}: ${r.campos.texto}`), M.obs||''].filter(Boolean).join('\n'),'');
+  L.push(`Data do preenchimento: ${brCompleta(hoje())}`,'', 'Assinatura do Instrutor(a)/Monitor(a): _______________________________________');
+
+  avisos.push('As respostas "Não" vêm da ausência de anotações. Confira se não esqueceu de anotar algo.');
+  return { texto: L.join('\n').replace(/\n{3,}/g,'\n\n'), avisos };
+}
+RENDER.relatorio = () => {
+  const ym=$('mRef').value, M=dadosMes(ym);
+  $('relRef').textContent = `Referência ${ym.split('-').reverse().join('/')} · ${br(M.inicio)} a ${br(M.fim)}`;
+};
+$('btnGerar').addEventListener('click', ()=>{
+  const {texto, avisos} = gerar();
+  $('saida').value = texto; $('boxSaida').hidden=false;
+  $('avisosRel').innerHTML = `<div class="aviso"><b>⚠ Conferir antes de entregar</b><ul>${avisos.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`;
+  toast('Proposta gerada');
+});
+$('btnCopiar').addEventListener('click', async ()=>{
+  try { await navigator.clipboard.writeText($('saida').value); toast('Copiado ✓'); }
+  catch(e){ $('saida').select(); document.execCommand('copy'); toast('Copiado ✓'); }
+});
+function baixar(nome, conteudo, tipo){
+  const url = URL.createObjectURL(new Blob([conteudo], {type:tipo}));
+  const a = document.createElement('a'); a.href=url; a.download=nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+const nomeArq = ext => `relatorio-mensal-${$('mRef').value.split('-').reverse().join('-')}.${ext}`;
+$('btnTxt').addEventListener('click', ()=>baixar(nomeArq('txt'), $('saida').value, 'text/plain;charset=utf-8'));
+$('btnDoc').addEventListener('click', ()=>{
+  const titulos = /^(RELATÓRIO MENSAL|\d\. )/;
+  const corpo = $('saida').value.split('\n').map(l =>
+    titulos.test(l) ? `<p style="font-weight:bold;font-size:${l.startsWith('RELATÓRIO')?'14pt':'12pt'};margin:12pt 0 4pt">${esc(l)}</p>`
+                    : `<p style="margin:0 0 2pt">${esc(l)||'&nbsp;'}</p>`).join('');
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Relatório mensal</title></head><body style="font-family:Arial,sans-serif;font-size:11pt">${corpo}</body></html>`;
+  baixar(nomeArq('doc'), '﻿'+html, 'application/msword');
+});
+
+/* ---------- AJUSTES ---------- */
+function renderTurmas(){
+  if(!S.turmas.length){ $('listaTurmas').innerHTML='<div class="vazio">Nenhuma turma cadastrada.</div>'; return; }
+  $('listaTurmas').innerHTML = S.turmas.map(t=>`<div class="turma-box" data-tid="${esc(t.id)}">
+    <label>Nome da turma</label><input data-f="nome" value="${esc(t.nome)}">
+    <label>Alunos matriculados</label><input data-f="matriculados" type="number" min="0" inputmode="numeric" value="${esc(t.matriculados)}">
+    <label>Dias de aula</label>
+    <div class="dias">${SEMANA.map((d,i)=>`<label><input type="checkbox" data-dia="${i}" ${(t.dias||[]).includes(i)?'checked':''}>${d}</label>`).join('')}</div>
+    <label>Alunos (um por linha)</label><textarea data-f="alunos" rows="6">${esc((t.alunos||[]).join('\n'))}</textarea>
+    <div class="linha"><button class="btn" data-salvaturma>Salvar turma</button><button class="btn perigo" data-rmturma>Remover</button></div>
+  </div>`).join('');
+}
+$('btnAddTurma').addEventListener('click', ()=>{
+  S.turmas.push({id:uid(), nome:`Turma ${S.turmas.length+1}`, matriculados:'', dias:[], alunos:[]}); salvar(); renderTurmas();
+});
+$('listaTurmas').addEventListener('click', e=>{
+  const box = e.target.closest('[data-tid]'); if(!box) return;
+  const t = S.turmas.find(x=>x.id===box.dataset.tid);
+  if(e.target.closest('[data-salvaturma]')){
+    t.nome = box.querySelector('[data-f="nome"]').value.trim() || t.nome;
+    t.matriculados = box.querySelector('[data-f="matriculados"]').value;
+    t.dias = [...box.querySelectorAll('[data-dia]:checked')].map(i=>Number(i.dataset.dia));
+    t.alunos = [...new Set(box.querySelector('[data-f="alunos"]').value.split('\n').map(s=>s.trim()).filter(Boolean))];
+    salvar(); toast('Turma salva');
+  }
+  if(e.target.closest('[data-rmturma]')){
+    if(!confirm(`Remover a turma "${t.nome}"? As anotações continuam salvas.`)) return;
+    S.turmas = S.turmas.filter(x=>x!==t); salvar(); renderTurmas();
+  }
+});
+RENDER.ajustes = () => {
+  $('cMun').value=S.config.municipio; $('cUni').value=S.config.unidade; $('cIns').value=S.config.instrutor; $('cMon').value=S.config.monitor; $('cLim').value=S.config.limiteFaltas;
+  $('infoBackup').textContent = S.ultimoBackup ? `Último backup: ${new Date(S.ultimoBackup).toLocaleString('pt-BR')}` : 'Nenhum backup feito ainda.';
+  renderTurmas();
+};
+$('btnSalvarCfg').addEventListener('click', ()=>{
+  Object.assign(S.config, {municipio:$('cMun').value.trim(), unidade:$('cUni').value.trim(), instrutor:$('cIns').value.trim(), monitor:$('cMon').value.trim(), limiteFaltas:Number($('cLim').value)||2});
+  salvar(); atualizarSub(); toast('Identificação salva');
+});
+function exportar(){
+  S.ultimoBackup = new Date().toISOString(); salvar();
+  baixar(`diario-backup-${hoje()}.json`, JSON.stringify(S,null,2), 'application/json');
+  toast('Backup exportado'); avisoBackup(); if($('t-ajustes').classList.contains('ativa')) RENDER.ajustes();
+}
+$('btnExport').addEventListener('click', exportar);
+$('btnImport').addEventListener('click', ()=>$('fileImport').click());
+$('fileImport').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(!d || !Array.isArray(d.registros)) throw new Error();
+      if(!confirm(`Importar backup com ${d.registros.length} anotações? Isso substitui os dados atuais deste aparelho.`)) return;
+      S=Object.assign(vazio(), d); salvar(); atualizarSub(); RENDER.ajustes(); toast('Backup importado');
+    }catch(err){ alert('Arquivo inválido.'); }
+    e.target.value='';
+  };
+  rd.readAsText(f);
+});
+$('btnApagar').addEventListener('click', ()=>{
+  if(!confirm('Apagar TODOS os dados deste aparelho? Faça um backup antes.')) return;
+  if(prompt('Digite APAGAR para confirmar')!=='APAGAR') return;
+  S=vazio(); salvar(); atualizarSub(); RENDER.ajustes(); toast('Dados apagados');
+});
+
+/* ---------- Início ---------- */
+function atualizarSub(){
+  $('subtitulo').textContent = S.config.unidade ? S.config.unidade : 'Anote na hora, relatório pronto no fim do mês';
+}
+$('fData').value = hoje();
+atualizarSub();
+RENDER.anotar();
+if(!S.config.monitor && !S.turmas.length){ setTimeout(()=>{ toast('Comece pelos Ajustes ⚙️'); }, 600); }
+})();
+</script>
+</body>
+</html>
